@@ -1,7 +1,8 @@
 import '../providers/direction_provider.dart';
+import '../providers/location_provider.dart';
+import '../providers/compass_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 
 class DirectionalArrow extends ConsumerStatefulWidget {
   const DirectionalArrow({super.key});
@@ -23,27 +24,56 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
   }
 
   @override
-  Widget build(BuildContext context) {
-    ref.listen<double>(relativeHeadingProvider, (previous, next) {
-      double newTurns = next / 360;
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    final locationAsync = ref.watch(userLocationProvider);
+    final compassAsync = ref.watch(compassHeadingProvider);
+
+    ref.listen<double>(relativeHeadingProvider, (previous, next) {
+      double targetTurns = next / 360;
       double currentTurns = _controller.value;
 
       double fullCircles = (currentTurns).floorToDouble();
-      newTurns += fullCircles;
-      if (newTurns - currentTurns > 0.5) {
-        newTurns -= 1.0;
-      } else if (newTurns - currentTurns < -0.5) {
-        newTurns += 1.0;
+      targetTurns += fullCircles;
+
+      if (targetTurns - currentTurns > 0.5) {
+        targetTurns -= 1.0;
+      } else if (targetTurns - currentTurns < -0.5) {
+        targetTurns += 1.0;
       }
 
-      _controller.animateTo(newTurns, curve: Curves.easeOut);
+      _controller.animateTo(targetTurns, curve: Curves.easeOut);
     });
 
+    if (locationAsync.isLoading || compassAsync.isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 10),
+            Text("Calibrating Sensors..."),
+          ],
+        ),
+      );
+    }
+
     return Center(
-      child: RotationTransition(
-        turns: _controller, // The controller now 'drives' the icon
-        child: const Icon(Icons.navigation, size: 200, color: Colors.red),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          RotationTransition(
+            turns: _controller,
+            child: const Icon(Icons.navigation, size: 200, color: Colors.red),
+          ),
+          const SizedBox(height: 20),
+          const Text("Point phone towards target"),
+        ],
       ),
     );
   }

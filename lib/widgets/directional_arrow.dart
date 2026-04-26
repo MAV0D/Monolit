@@ -85,6 +85,17 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
           ),
           const SizedBox(height: 20),
           const Text("Point phone towards target"),
+          StreamBuilder<MagnetometerEvent>(
+            stream: magnetometerEvents,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Text(
+                  "Raw Mag: x:${snapshot.data!.x.toStringAsFixed(1)} y:${snapshot.data!.y.toStringAsFixed(1)}",
+                );
+              }
+              return Text("Magnetometer stream: No Data");
+            },
+          ),
         ],
       ),
     );

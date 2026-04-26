@@ -3,6 +3,7 @@ import '../providers/location_provider.dart';
 import '../providers/compass_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 class DirectionalArrow extends ConsumerStatefulWidget {
   const DirectionalArrow({super.key});
@@ -58,6 +59,17 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
             CircularProgressIndicator(),
             SizedBox(height: 10),
             Text("Calibrating Sensors..."),
+            StreamBuilder<MagnetometerEvent>(
+              stream: magnetometerEvents,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Text(
+                    "Raw Mag: x:${snapshot.data!.x.toStringAsFixed(1)} y:${snapshot.data!.y.toStringAsFixed(1)}",
+                  );
+                }
+                return Text("Magnetometer stream: No Data");
+              },
+            ),
           ],
         ),
       );

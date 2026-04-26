@@ -52,7 +52,7 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     });
 
     if (locationAsync.isLoading || compassAsync.isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

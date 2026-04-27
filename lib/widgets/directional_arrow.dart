@@ -1,6 +1,6 @@
 import '../providers/direction_provider.dart';
 import '../providers/location_provider.dart';
-import '../providers/compass_provider.dart';
+import '../providers/web_compass_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -33,7 +33,7 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
   @override
   Widget build(BuildContext context) {
     final locationAsync = ref.watch(userLocationProvider);
-    final compassAsync = ref.watch(compassHeadingProvider);
+    final compassAsync = ref.watch(webCompassProvider);
 
     ref.listen<double>(relativeHeadingProvider, (previous, next) {
       double targetTurns = next / 360;

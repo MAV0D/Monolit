@@ -1,5 +1,8 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+import 'package:web/web.dart' as web;
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 part 'location_provider.g.dart';
 
@@ -41,5 +44,29 @@ Stream<Position> userLocation(Ref ref) async* {
         distanceFilter: 1,
       ),
     );
+  }
+}
+
+Future<void> requestWebSensorPermission() async {
+  try {
+    final window = web.window;
+
+    // Use js_interop_unsafe to safely look up JS properties
+    if (window.has('DeviceOrientationEvent')) {
+      final jsClass = window['DeviceOrientationEvent'] as JSObject?;
+
+      // Check if it's an iOS device requiring permission
+      if (jsClass != null && jsClass.has('requestPermission')) {
+        final promise =
+            jsClass.callMethod('requestPermission'.toJS) as JSPromise?;
+
+        if (promise != null) {
+          final result = await promise.toDart;
+          print("Permission result: $result");
+        }
+      }
+    }
+  } catch (e) {
+    print("Sensor permission error: $e");
   }
 }

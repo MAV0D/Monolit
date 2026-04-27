@@ -8,11 +8,11 @@ double lat = 54.89974982961843;
 double lon = 23.96724556922512;
 
 @riverpod
-double relativeHeading(Ref ref) {
+double? relativeHeading(Ref ref) {
   final userLocation = ref.watch(userLocationProvider).value;
   final userHeading = ref.watch(webCompassProvider).value ?? 0.0;
 
-  if (userLocation == null) return 0.0;
+  if (userLocation == null) return null;
 
   final targetHeading = Geolocator.bearingBetween(
     userLocation.latitude,

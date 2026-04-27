@@ -35,7 +35,13 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     final locationAsync = ref.watch(userLocationProvider);
     final compassAsync = ref.watch(webCompassProvider);
 
-    ref.listen<double>(relativeHeadingProvider, (previous, next) {
+    // Watch the heading to trigger UI changes based on null
+    final heading = ref.watch(relativeHeadingProvider);
+
+    // Update listen to expect double? to prevent crashes before GPS lock
+    ref.listen<double?>(relativeHeadingProvider, (previous, next) {
+      if (next == null) return; // Do not animate if we don't have a bearing
+
       double targetTurns = next / 360;
       double currentTurns = _controller.value;
 
@@ -51,14 +57,15 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
       _controller.animateTo(targetTurns, curve: Curves.easeOut);
     });
 
-    if (locationAsync.isLoading || compassAsync.isLoading) {
+    // Check heading == null alongside your loading states
+    if (heading == null || locationAsync.isLoading || compassAsync.isLoading) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 10),
-            Text("Calibrating Sensors..."),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 10),
+            const Text("Calibrating Sensors..."),
             StreamBuilder<MagnetometerEvent>(
               stream: magnetometerEvents,
               builder: (context, snapshot) {
@@ -67,7 +74,7 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
                     "Raw Mag: x:${snapshot.data!.x.toStringAsFixed(1)} y:${snapshot.data!.y.toStringAsFixed(1)}",
                   );
                 }
-                return Text("Magnetometer stream: No Data");
+                return const Text("Magnetometer stream: No Data");
               },
             ),
           ],
@@ -85,17 +92,6 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
           ),
           const SizedBox(height: 20),
           const Text("Point phone towards target"),
-          StreamBuilder<MagnetometerEvent>(
-            stream: magnetometerEvents,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Text(
-                  "Raw Mag: x:${snapshot.data!.x.toStringAsFixed(1)} y:${snapshot.data!.y.toStringAsFixed(1)}",
-                );
-              }
-              return Text("Magnetometer stream: No Data");
-            },
-          ),
         ],
       ),
     );

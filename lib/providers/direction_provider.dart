@@ -11,15 +11,34 @@ double lon = 23.96724556922512;
 double? relativeHeading(Ref ref) {
   final userLocation = ref.watch(userLocationProvider).value;
   final userHeading = ref.watch(webCompassProvider).value ?? 0.0;
+  final destination = ref.watch(destinationProvider);
 
   if (userLocation == null) return null;
 
   final targetHeading = Geolocator.bearingBetween(
     userLocation.latitude,
     userLocation.longitude,
-    lat,
-    lon,
+    destination.lat,
+    destination.lon,
   );
 
-  return (targetHeading + 360) - userHeading;
+  return targetHeading - userHeading;
+}
+
+class LatLon {
+  final double lat;
+  final double lon;
+  LatLon(this.lat, this.lon);
+}
+
+@riverpod
+class Destination extends _$Destination {
+  @override
+  LatLon build() {
+    return LatLon(49.19479401856215, 16.60859699183198);
+  }
+
+  void updateDestination(double lat, double lon) {
+    state = LatLon(lat, lon);
+  }
 }

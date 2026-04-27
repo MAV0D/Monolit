@@ -3,7 +3,6 @@ import '../providers/location_provider.dart';
 import '../providers/web_compass_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 
 class DirectionalArrow extends ConsumerStatefulWidget {
   const DirectionalArrow({super.key});
@@ -38,35 +37,29 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     final locationAsync = ref.watch(userLocationProvider);
     final compassAsync = ref.watch(webCompassProvider);
 
-    // Watch the heading to trigger UI changes based on null
     final heading = ref.watch(relativeHeadingProvider);
-
-    // Update listen to expect double? to prevent crashes before GPS lock
 
     ref.listen<double?>(relativeHeadingProvider, (previous, next) {
       if (next == null) return;
 
-      // 1. Convert degrees to turns (e.g., 90 deg = 0.25 turns)
+      // degrees to num
       double targetTurns = next / 360;
       double currentTurns = _controller.value;
 
-      // 2. Find the shortest path (the delta)
-      // This calculates how much we need to move from where we are right now
+      // distance to new heading
       double delta = (targetTurns - currentTurns) % 1.0;
 
-      // 3. Adjust the delta so it's always between -0.5 and 0.5
-      // This ensures the arrow never spins more than 180 degrees to get to the target
+      // choosing shortest path
       if (delta > 0.5) {
         delta -= 1.0;
       } else if (delta < -0.5) {
         delta += 1.0;
       }
 
-      // 4. Animate to the new absolute position (current + shortest gap)
       _controller.animateTo(currentTurns + delta, curve: Curves.easeOut);
     });
 
-    // Check heading == null alongside your loading states
+    // loading state
     if (heading == null || locationAsync.isLoading || compassAsync.isLoading) {
       return Center(
         child: Column(
@@ -81,16 +74,14 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     }
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          RotationTransition(
-            turns: _controller,
-            child: const Icon(Icons.navigation, size: 200, color: Colors.red),
-          ),
-          const SizedBox(height: 20),
-          const Text("Point phone towards target"),
-        ],
+      child: RotationTransition(
+        turns: _controller,
+        child: Image.asset(
+          "assets/monolit.png",
+          width: 250,
+          height: 250,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }

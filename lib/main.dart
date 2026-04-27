@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widgets/directional_arrow.dart';
 import 'package:geolocator/geolocator.dart';
+import 'providers/location_provider.dart'; // Adjust path if needed
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -53,10 +54,20 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     textStyle: const TextStyle(fontSize: 20),
                   ),
                   onPressed: () async {
-                    // 1. Request GPS permission explicitly on tap
+                    // 1. Request GPS permission
                     await Geolocator.requestPermission();
 
-                    // 2. Refresh the UI
+                    // 2. Request Compass/Motion permission (CRITICAL for Web)
+                    await requestWebSensorPermission();
+
+                    // 3. Force the GPS to grab an immediate location to "wake up" the stream
+                    await Geolocator.getCurrentPosition(
+                      locationSettings: const LocationSettings(
+                        accuracy: LocationAccuracy.best,
+                      ),
+                    ).catchError((e) => print(e)); // Catch errors if indoors
+
+                    // 4. Refresh the UI
                     setState(() {
                       _hasStarted = true;
                     });

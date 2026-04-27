@@ -13,8 +13,8 @@ part of 'direction_provider.dart';
 final relativeHeadingProvider = RelativeHeadingProvider._();
 
 final class RelativeHeadingProvider
-    extends $FunctionalProvider<double, double, double>
-    with $Provider<double> {
+    extends $FunctionalProvider<double?, double?, double?>
+    with $Provider<double?> {
   RelativeHeadingProvider._()
     : super(
         from: null,
@@ -31,21 +31,21 @@ final class RelativeHeadingProvider
 
   @$internal
   @override
-  $ProviderElement<double> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<double?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  double create(Ref ref) {
+  double? create(Ref ref) {
     return relativeHeading(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(double value) {
+  Override overrideWithValue(double? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<double>(value),
+      providerOverride: $SyncValueProvider<double?>(value),
     );
   }
 }
 
-String _$relativeHeadingHash() => r'fab4523e9413fcf30ecd5bc7f2044d7895cc9f33';
+String _$relativeHeadingHash() => r'44e335dfe0387322448c9c34009700f061a72e75';

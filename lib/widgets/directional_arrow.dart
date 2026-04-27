@@ -69,20 +69,9 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 10),
-            Text("Calibrating Sensors..."),
-            StreamBuilder<MagnetometerEvent>(
-              stream: magnetometerEvents,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Text(
-                    "Raw Mag: x:${snapshot.data!.x.toStringAsFixed(1)} y:${snapshot.data!.y.toStringAsFixed(1)}",
-                  );
-                }
-                return Text("Magnetometer stream: No Data");
-              },
-            ),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 10),
+            const Text("Calibrating Sensors..."),
           ],
         ),
       );

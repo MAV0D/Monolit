@@ -21,6 +21,8 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
+      lowerBound: double.negativeInfinity,
+      upperBound: double.infinity,
     );
   }
 

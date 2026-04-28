@@ -61,16 +61,7 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
 
     // loading state
     if (heading == null || locationAsync.isLoading || compassAsync.isLoading) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 10),
-            const Text("Calibrating Sensors..."),
-          ],
-        ),
-      );
+      return Center(child: const SizedBox(height: 10));
     }
 
     return Center(

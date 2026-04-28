@@ -28,6 +28,7 @@ class NavigationScreen extends StatefulWidget {
 class _NavigationScreenState extends State<NavigationScreen> {
   bool _hasStarted = false;
   String _setupState = "Zapnout senzory";
+  Color _textColor = Color.fromARGB(255, 102, 80, 163);
   final TextEditingController _coordsController = TextEditingController();
 
   void _updateDestination(WidgetRef ref) {
@@ -104,17 +105,21 @@ class _NavigationScreenState extends State<NavigationScreen> {
                             color: Colors.white,
                           ),
                         ),
-                  label: Text(_setupState),
+                  label: Text(_setupState, style: TextStyle(color: _textColor)),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 40,
                       vertical: 20,
                     ),
+                    foregroundColor: _textColor,
                     textStyle: const TextStyle(fontSize: 20),
                   ),
                   onPressed: _setupState == "Zapnout senzory"
                       ? () async {
-                          setState(() => _setupState = "Zapínání GPS...");
+                          setState(() {
+                            _setupState = "Zapínání GPS...";
+                            _textColor = Colors.white;
+                          });
                           // GPS permission
                           await Geolocator.requestPermission();
                           // Compass/Motion permission

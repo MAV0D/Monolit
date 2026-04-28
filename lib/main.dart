@@ -38,7 +38,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
       final lat = double.tryParse(parts[0].trim());
       final lon = double.tryParse(parts[1].trim());
       if (lat != null && lon != null) {
-        ref.read(destinationProvider.notifier).state = LatLon(lat, lon);
+        ref.read(destinationProvider.notifier).updateDestination(lat, lon);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Souřadnice nastaveny!")));

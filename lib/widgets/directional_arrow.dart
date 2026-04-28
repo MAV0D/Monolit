@@ -61,7 +61,20 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
 
     // loading state
     if (heading == null || locationAsync.isLoading || compassAsync.isLoading) {
-      return Center(child: const SizedBox(height: 10));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              heading != null || compassAsync.isLoading
+                  ? "Kompas se načítá"
+                  : "",
+            ),
+            const SizedBox(height: 10),
+            Text(locationAsync.isLoading ? "GPS se načítá" : ""),
+          ],
+        ),
+      );
     }
 
     return Center(

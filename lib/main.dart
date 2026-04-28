@@ -116,15 +116,16 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   ),
                   onPressed: _setupState == "Zapnout senzory"
                       ? () async {
+                          // Compass/Motion permission
+                          setState(() => _setupState = "Zapínání kompasu...");
+                          await requestWebSensorPermission();
+
+                          // GPS permission
                           setState(() {
                             _setupState = "Zapínání GPS...";
                             _textColor = Colors.white;
                           });
-                          // GPS permission
                           await Geolocator.requestPermission();
-                          // Compass/Motion permission
-                          setState(() => _setupState = "Zapínání kompasu...");
-                          await requestWebSensorPermission();
 
                           // First GPS fix
                           setState(() => _setupState = "Získávání pozice...");

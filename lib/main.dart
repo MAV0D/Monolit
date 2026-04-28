@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widgets/directional_arrow.dart';
-// import 'package:geolocator/geolocator.dart';
-// import 'providers/location_provider.dart';
+import 'package:geolocator/geolocator.dart';
+import 'providers/location_provider.dart';
 import 'providers/direction_provider.dart';
 
 void main() {
@@ -26,6 +26,8 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
+  bool _hasStarted = false;
+  String _setupState = "Zapnout senzory";
   final TextEditingController _coordsController = TextEditingController();
 
   void _updateDestination(WidgetRef ref) {
@@ -85,6 +87,59 @@ class _NavigationScreenState extends State<NavigationScreen> {
               ],
             ),
           ),
+          if (!_hasStarted)
+            Container(
+              color: Colors.black.withValues(alpha: 0.8),
+              width: double.infinity,
+              height: double.infinity,
+              child: Center(
+                child: ElevatedButton.icon(
+                  icon: _setupState == "Zapnout senzory"
+                      ? const Icon(Icons.play_arrow)
+                      : const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                  label: Text(_setupState),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 20,
+                    ),
+                    textStyle: const TextStyle(fontSize: 20),
+                  ),
+                  onPressed: _setupState == "Zapnout senzory"
+                      ? () async {
+                          setState(() => _setupState = "Zapínání GPS...");
+                          // GPS permission
+                          await Geolocator.requestPermission();
+                          // Compass/Motion permission
+                          setState(() => _setupState = "Zapínání kompasu...");
+                          await requestWebSensorPermission();
+
+                          // First GPS fix
+                          setState(() => _setupState = "Získávání pozice...");
+                          await Geolocator.getCurrentPosition(
+                            locationSettings: const LocationSettings(
+                              accuracy: LocationAccuracy.best,
+                            ),
+                          ).catchError(
+                            (e) => print(e),
+                          ); // Catch errors if indoors
+
+                          // Refresh UI without overlay
+                          setState(() {
+                            _hasStarted = true;
+                          });
+                        }
+                      : null,
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -6,6 +6,15 @@ import 'package:web/web.dart' as web;
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 part 'location_provider.g.dart';
 
+@riverpod
+class TrackingEnabled extends _$TrackingEnabled {
+  @override
+  bool build() => false;
+
+  void enable() => state = true;
+  void disable() => state = false;
+}
+
 Future<bool> _getPermission() async {
   bool serviceEnabled;
   LocationPermission permission;
@@ -31,18 +40,22 @@ Future<bool> _getPermission() async {
 }
 
 @riverpod
-Stream<Position> userLocation(Ref ref) async* {
-  // 1. Wait for permission
-  final permission = await _getPermission();
-  // 2. If granted, yield* the geolocator stream
-  if (permission) {
-    yield* Geolocator.getPositionStream(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: 5,
-      ),
-    );
+Stream<Position> userLocation(Ref ref) {
+  // Sledujeme náš nový jistič
+  final isTrackingEnabled = ref.watch(trackingEnabledProvider);
+
+  // Pokud sledování není povolené, vrátíme prázdný stream a vůbec nesaháme na Geolocator!
+  if (!isTrackingEnabled) {
+    return const Stream.empty();
   }
+
+  // Teprve když je povolené, nastartuje se skutečné vyžadování GPS dat:
+  return Geolocator.getPositionStream(
+    locationSettings: const LocationSettings(
+      accuracy: LocationAccuracy.best,
+      distanceFilter: 5,
+    ),
+  );
 }
 
 Future<void> requestWebSensorPermission() async {

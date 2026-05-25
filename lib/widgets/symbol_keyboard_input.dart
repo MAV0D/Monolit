@@ -29,8 +29,36 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
     "B",
   ];
 
+  final Map<String, String> _symbolImages = {
+    "0": "assets/sym_0.png",
+    "1": "assets/sym_0.png",
+    "2": "assets/sym_0.png",
+    "3": "assets/sym_0.png",
+    "4": "assets/sym_0.png",
+    "5": "assets/sym_0.png",
+    "6": "assets/sym_0.png",
+    "7": "assets/sym_0.png",
+    "8": "assets/sym_0.png",
+    "9": "assets/sym_0.png",
+    "A": "assets/sym_0.png",
+    "B": "assets/sym_0.png",
+  };
+
   // 4-místný kód (můžete změnit délku změnou velikosti listu)
-  final List<String> _enteredCode = ["", "", "", ""];
+  final List<String> _enteredCode = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ];
   int _currentFocusIndex = 0;
 
   void _onSymbolTap(String symbol) {
@@ -47,16 +75,22 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
 
   void _onDelete() {
     setState(() {
-      _enteredCode[_currentFocusIndex] = "";
-      if (_currentFocusIndex > 0) {
+      if (_enteredCode[_currentFocusIndex] == "" && _currentFocusIndex > 0) {
         _currentFocusIndex--;
+        _enteredCode[_currentFocusIndex] = "";
+      } else {
+        _enteredCode[_currentFocusIndex] = "";
       }
     });
   }
 
   void _submitCode() {
     final fullCode = _enteredCode.join();
-    if (larpDatabase.containsKey(fullCode)) {
+    if (fullCode.length != 12) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Monolit nelze aktivovat.")));
+    } else if (larpDatabase.containsKey(fullCode)) {
       final target = larpDatabase[fullCode]!;
       ref
           .read(destinationProvider.notifier)
@@ -65,12 +99,12 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
       widget.onCodeAccepted();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Monolit zaměřen! Výchozí bod nastaven.")),
+        SnackBar(content: Text("Aktivace monolitu úspěšná. Jste přenášeni.")),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Neznámá sekvence symbolů!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Monolit nelze aktivovat.")));
     }
   }
 
@@ -90,6 +124,7 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                 width: 50,
                 height: 60,
                 margin: const EdgeInsets.symmetric(horizontal: 6),
+                padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
@@ -100,12 +135,12 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                     width: isFocused ? 2 : 1,
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    _enteredCode[index],
-                    style: const TextStyle(fontSize: 28, color: Colors.white),
-                  ),
-                ),
+                child: _enteredCode[index].isNotEmpty
+                    ? Image.asset(
+                        _symbolImages[_enteredCode[index]]!,
+                        fit: BoxFit.contain,
+                      )
+                    : null,
               ),
             );
           }),
@@ -139,17 +174,14 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shape: const CircleBorder(),
-                        padding: EdgeInsets.zero,
+                        padding: EdgeInsets.all(6),
                         backgroundColor: const Color(0xFF1F1F1F),
                         side: const BorderSide(color: Colors.red, width: 1),
                       ),
                       onPressed: () => _onSymbolTap(_symbols[index]),
-                      child: Text(
-                        _symbols[index],
-                        style: const TextStyle(
-                          fontSize: 22,
-                          color: Colors.white,
-                        ),
+                      child: Image.asset(
+                        _symbolImages[_symbols[index]]!,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
@@ -175,7 +207,7 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           onPressed: _submitCode,
           icon: const Icon(Icons.radar),
-          label: const Text("Aktivovat souřadnice"),
+          label: const Text("Aktivovat monolit"),
         ),
       ],
     );

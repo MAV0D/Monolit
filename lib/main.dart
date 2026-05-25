@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widgets/directional_arrow.dart';
-import 'widgets/symbol_keyboard_input.dart'; // Předpokládám tento název pro vaši klávesnici
+import 'widgets/symbol_keyboard_input.dart';
 import 'package:geolocator/geolocator.dart';
 import 'providers/location_provider.dart';
 import 'providers/direction_provider.dart';
@@ -16,23 +16,61 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'LARP Navigátor',
-      theme: ThemeData.dark(), // Tmavé téma se k LARPu hodí skvěle
+      title: 'Monolitní navigace',
+      theme: ThemeData.dark(),
       home: const NavigationScreen(),
     );
   }
 }
 
-class NavigationScreen extends StatefulWidget {
+class NavigationScreen extends ConsumerStatefulWidget {
   const NavigationScreen({super.key});
 
   @override
-  State<NavigationScreen> createState() => _NavigationScreenState();
+  ConsumerState<NavigationScreen> createState() => _NavigationScreenState();
 }
 
-class _NavigationScreenState extends State<NavigationScreen> {
+class _NavigationScreenState extends ConsumerState<NavigationScreen> {
   bool _sensorsInitialized = false;
   String _setupState = "";
+  late final AppLifecycleListener _lifecycleListener;
+
+  bool _isFirstLoad = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Inicializace posluchače na minimalizaci/maximalizaci aplikace
+    _lifecycleListener = AppLifecycleListener(
+      onResume: () {
+        _handleAppReturn();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycleListener.dispose(); // <--- Nezapomenout uklidit
+    super.dispose();
+  }
+
+  void _handleAppReturn() async {
+    if (_isFirstLoad) {
+      _isFirstLoad = false;
+      return;
+    }
+
+    final destination = ref.read(destinationProvider);
+
+    if (destination != null) {
+      setState(() {
+        _sensorsInitialized = false;
+      });
+
+      await _initializeSensors();
+    }
+  }
 
   // Funkce, která inicializuje senzory až po zadání kódu
   Future<void> _initializeSensors() async {
@@ -48,9 +86,17 @@ class _NavigationScreenState extends State<NavigationScreen> {
     });
     await Geolocator.requestPermission();
 
-    await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
-    ).catchError((e) {});
+    ref.read(trackingEnabledProvider.notifier).enable();
+
+    try {
+      await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+        ),
+      );
+    } catch (e) {
+      print("Chyba prvního fixu: $e");
+    }
 
     setState(() {
       _sensorsInitialized = true;
@@ -68,6 +114,24 @@ class _NavigationScreenState extends State<NavigationScreen> {
             final destination = ref.watch(destinationProvider);
             final isInTargetZone = ref.watch(targetZoneStatusProvider);
 
+            if (destination != null && !_sensorsInitialized) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(color: Colors.red),
+                    const SizedBox(height: 20),
+                    Text(
+                      _setupState.isEmpty
+                          ? "Obnovování GPS lokace..."
+                          : _setupState,
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             if (destination == null) {
               return Center(
                 child: SingleChildScrollView(
@@ -75,7 +139,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        "Zadejte kód artefaktu",
+                        "Adresa Monolitu",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
@@ -120,7 +184,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   padding: const EdgeInsets.all(24),
                   margin: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.85),
+                    color: Color(0xE894002E),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
@@ -134,14 +198,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.check_circle_outline,
-                        size: 90,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(height: 20),
                       const Text(
-                        "DORAZIL JSI NA MÍSTO!",
+                        "Puf, jsi na místě!",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -151,7 +209,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        "Artefakt zajištěn. Vyhledejte fyzickou schránku v okolí.",
+                        "Jakmile najdeš fyzicky umístěný monolit zhmotníš se v reálném světe, monolit je označeny XXXYYY.",
                         style: TextStyle(fontSize: 16, color: Colors.white70),
                         textAlign: TextAlign.center,
                       ),
@@ -159,7 +217,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: Colors.green,
+                          foregroundColor: Color(0xFF94002E),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 32,
                             vertical: 12,
@@ -169,19 +227,21 @@ class _NavigationScreenState extends State<NavigationScreen> {
                           ),
                         ),
                         onPressed: () {
-                          // Resetujeme stav hystereze
                           ref
                               .read(targetZoneStatusProvider.notifier)
                               .resetZone();
-                          // Smazáním cíle se aplikace automaticky přepne zpět na STAV 1 (Klávesnice)
                           ref
                               .read(destinationProvider.notifier)
                               .clearDestination();
-                          // Pro další kód chceme, aby se GPS lock udělal rovnou,
-                          // senzory už jsou schválené prohlížečem, tak je můžeme nechat true
+
+                          // Vypne GPS hardware, dokud neklepnou na další kód
+                          ref.read(trackingEnabledProvider.notifier).disable();
+                          setState(() {
+                            _sensorsInitialized = false;
+                          });
                         },
                         child: const Text(
-                          "Zadat další kód",
+                          "Vydat se na další cestu",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

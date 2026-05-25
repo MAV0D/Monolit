@@ -90,7 +90,7 @@ final class DistanceToDestinationProvider
 }
 
 String _$distanceToDestinationHash() =>
-    r'bed7a5b2b7a83750d3f7725f1c742d4c213777fb';
+    r'ce130127c3aafc545283a276c3eba4401d652793';
 
 @ProviderFor(Destination)
 final destinationProvider = DestinationProvider._();
@@ -176,7 +176,7 @@ final class TargetZoneStatusProvider
   }
 }
 
-String _$targetZoneStatusHash() => r'aa03e06a320a6f4bd17b03a7b98219e44c99d849';
+String _$targetZoneStatusHash() => r'999f6268ba9aee702a523128e1cf7fad7625f180';
 
 abstract class _$TargetZoneStatus extends $Notifier<bool> {
   bool build();

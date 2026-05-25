@@ -32,16 +32,12 @@ double? distanceToDestination(Ref ref) {
 
   if (userLocation == null || destination == null) return null;
 
-  final distance = Geolocator.distanceBetween(
+  return Geolocator.distanceBetween(
     userLocation.latitude,
     userLocation.longitude,
     destination.lat,
     destination.lon,
   );
-
-  ref.read(targetZoneStatusProvider.notifier).updateStatus(distance);
-
-  return distance;
 }
 
 class LatLon {
@@ -70,28 +66,34 @@ class Destination extends _$Destination {
 class TargetZoneStatus extends _$TargetZoneStatus {
   @override
   bool build() {
-    // Výchozí stav je, že hráč v cíli není
+    // 1. Zaregistrujeme posluchače na provider vzdálenosti.
+    // Tento posluchač se spustí POKAŽDÉ, když se vzdálenost změní,
+    // ale spustí se až PO TOM, co se dokončí buildování okolních elementů.
+    ref.listen<double?>(distanceToDestinationProvider, (previous, next) {
+      if (next == null) return;
+
+      // Pokud jsme doteď byli VENKU (false) a přiblížili jsme se pod 15m -> jsme UVNITŘ
+      if (!state && next <= 15.0) {
+        state = true;
+      }
+      // Pokud jsme doteď byli UVNITŘ (true) a vzdálili jsme se nad 25m -> jsme VENKU
+      else if (state && next > 25.0) {
+        state = false;
+      }
+    });
+
+    // 2. Výchozí stav při prvním spuštění hry je false (hráč není v cíli)
     return false;
   }
 
-  void updateStatus(double distance) {
-    // 1. Pokud je hráč venku a přiblíží se pod 15 metrů -> Vstoupil do cíle
-    if (!state && distance <= 15.0) {
-      state = true;
-    }
-    // 2. Pokud už je v cíli, ale vzdálí se nad 25 metrů -> Opustil cíl
-    else if (state && distance > 25.0) {
-      state = false;
-    }
-  }
-
+  // Tuto metodu zavoláme v main.dart, když hráč klikne na tlačítko "Zadat další kód"
   void resetZone() {
     state = false;
   }
 }
 
 Map<String, LatLon> larpDatabase = {
-  "0123": LatLon(54.89686701139079, 23.969021499723920),
-  "4567": LatLon(54.88202643885115, 23.969924360645024),
-  "89AB": LatLon(54.90588721480218, 23.964222218679830),
+  "111111111111": LatLon(54.89686701139079, 23.969021499723920),
+  "333333333333": LatLon(54.88202643885115, 23.969924360645024),
+  "222222222222": LatLon(54.90588721480218, 23.964222218679830),
 };

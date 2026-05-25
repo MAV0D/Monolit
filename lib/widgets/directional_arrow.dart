@@ -38,7 +38,7 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     final compassAsync = ref.watch(webCompassProvider);
 
     final heading = ref.watch(relativeHeadingProvider);
-    final isInTargetZone = ref.watch(targetZoneStatusProvider);
+    final distance = ref.watch(distanceToDestinationProvider);
 
     ref.listen<double?>(relativeHeadingProvider, (previous, next) {
       if (next == null) return;
@@ -79,14 +79,23 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     }
 
     return Center(
-      child: RotationTransition(
-        turns: _controller,
-        child: Image.asset(
-          "assets/monolit.png",
-          width: 250,
-          height: 250,
-          fit: BoxFit.contain,
-        ),
+      child: Column(
+        children: [
+          RotationTransition(
+            turns: _controller,
+            child: Image.asset(
+              "assets/monolit.png",
+              width: 250,
+              height: 250,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "${distance!.toStringAsFixed(0)} m",
+            style: TextStyle(color: Colors.white),
+          ),
+        ],
       ),
     );
   }

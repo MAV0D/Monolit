@@ -44,7 +44,6 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
     "B": "assets/sym_0.png",
   };
 
-  // 4-místný kód (můžete změnit délku změnou velikosti listu)
   final List<String> _enteredCode = [
     "",
     "",
@@ -118,29 +117,31 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(_enteredCode.length, (index) {
             final isFocused = index == _currentFocusIndex;
-            return GestureDetector(
-              onTap: () => setState(() => _currentFocusIndex = index),
-              child: Container(
-                width: 50,
-                height: 60,
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isFocused
-                        ? Colors.red
-                        : Colors.grey.withValues(alpha: 0.5),
-                    width: isFocused ? 2 : 1,
+            return Flexible(
+              child: GestureDetector(
+                onTap: () => setState(() => _currentFocusIndex = index),
+                child: Container(
+                  width: 50,
+                  height: 60,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isFocused
+                          ? Colors.red
+                          : Colors.grey.withValues(alpha: 0.5),
+                      width: isFocused ? 2 : 1,
+                    ),
                   ),
+                  child: _enteredCode[index].isNotEmpty
+                      ? Image.asset(
+                          _symbolImages[_enteredCode[index]]!,
+                          fit: BoxFit.contain,
+                        )
+                      : null,
                 ),
-                child: _enteredCode[index].isNotEmpty
-                    ? Image.asset(
-                        _symbolImages[_enteredCode[index]]!,
-                        fit: BoxFit.contain,
-                      )
-                    : null,
               ),
             );
           }),

@@ -189,7 +189,7 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withValues(alpha: 0.4),
+                        color: Color(0x4094002E),
                         blurRadius: 15,
                         spreadRadius: 2,
                       ),

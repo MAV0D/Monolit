@@ -38,6 +38,7 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     final compassAsync = ref.watch(webCompassProvider);
 
     final heading = ref.watch(relativeHeadingProvider);
+    final isInTargetZone = ref.watch(targetZoneStatusProvider);
 
     ref.listen<double?>(relativeHeadingProvider, (previous, next) {
       if (next == null) return;
@@ -73,6 +74,48 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
             const SizedBox(height: 10),
             Text(locationAsync.isLoading ? "GPS se načítá" : ""),
           ],
+        ),
+      );
+    }
+
+    if (isInTargetZone) {
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.green.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                size: 100,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Puf, jsi na místě.",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Jakmile najdeš fyzicky umístěný monolit zhmotníš se v reálném světe, monolit je označeny XXXYYY.",
+                style: TextStyle(fontSize: 16, color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: () {}, child: const Text("Pokračovat")),
+            ],
+          ),
         ),
       );
     }

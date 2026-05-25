@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widgets/directional_arrow.dart';
+import 'widgets/symbol_keyboard_input.dart'; // Předpokládám tento název pro vaši klávesnici
 import 'package:geolocator/geolocator.dart';
 import 'providers/location_provider.dart';
 import 'providers/direction_provider.dart';
@@ -14,7 +15,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: NavigationScreen());
+    return MaterialApp(
+      title: 'LARP Navigátor',
+      theme: ThemeData.dark(), // Tmavé téma se k LARPu hodí skvěle
+      home: const NavigationScreen(),
+    );
   }
 }
 
@@ -26,127 +31,172 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
-  bool _hasStarted = false;
-  String _setupState = "Zapnout senzory";
-  Color _textColor = Color.fromARGB(255, 102, 80, 163);
-  final TextEditingController _coordsController = TextEditingController();
+  bool _sensorsInitialized = false;
+  String _setupState = "";
 
-  void _updateDestination(WidgetRef ref) {
-    final input = _coordsController.text;
-    final parts = input.split(',');
-    if (parts.length == 2) {
-      final lat = double.tryParse(parts[0].trim());
-      final lon = double.tryParse(parts[1].trim());
-      if (lat != null && lon != null) {
-        ref.read(destinationProvider.notifier).updateDestination(lat, lon);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Souřadnice nastaveny!")));
-      }
-    }
+  // Funkce, která inicializuje senzory až po zadání kódu
+  Future<void> _initializeSensors() async {
+    if (_sensorsInitialized) return;
+
+    setState(() {
+      _setupState = "Aktivace kompasu...";
+    });
+    await requestWebSensorPermission();
+
+    setState(() {
+      _setupState = "Zaměřování GPS...";
+    });
+    await Geolocator.requestPermission();
+
+    await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
+    ).catchError((e) {});
+
+    setState(() {
+      _sensorsInitialized = true;
+      _setupState = "";
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Monolitní navigace -- PROTOTYP')),
-      body: Stack(
-        children: [
-          // The main content (The Arrow and status text)
-          const Center(child: DirectionalArrow()),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _coordsController,
-                    style: const TextStyle(color: Colors.black),
-                    decoration: const InputDecoration(
-                      hintText: "Zem. délka, šířka",
-                      hintStyle: TextStyle(color: Colors.white30),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color.fromARGB(200, 244, 67, 54),
+      backgroundColor: const Color(0xFF0F0F0F),
+      body: SafeArea(
+        child: Consumer(
+          builder: (context, ref, child) {
+            final destination = ref.watch(destinationProvider);
+            final isInTargetZone = ref.watch(targetZoneStatusProvider);
+
+            if (destination == null) {
+              return Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Zadejte kód artefaktu",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red),
+                      const SizedBox(height: 30),
+                      // Klávesnici předáme callback, který se spustí při úspěšném zadání
+                      SymbolKeyboardInput(
+                        onCodeAccepted: () {
+                          _initializeSensors();
+                        },
                       ),
-                    ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Consumer(
-                  builder: (context, ref, _) {
-                    return ElevatedButton(
-                      onPressed: () => _updateDestination(ref),
-                      child: const Text("Ukázat směr"),
-                    );
-                  },
+              );
+            }
+
+            // STAV 2: Kód je zadán, ale senzory se teprve startují
+            if (!_sensorsInitialized) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(color: Colors.red),
+                    const SizedBox(height: 20),
+                    Text(
+                      _setupState,
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          if (!_hasStarted)
-            Container(
-              color: Colors.black.withValues(alpha: 0.8),
-              width: double.infinity,
-              height: double.infinity,
-              child: Center(
-                child: ElevatedButton.icon(
-                  icon: _setupState == "Zapnout senzory"
-                      ? const Icon(Icons.play_arrow)
-                      : const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+              );
+            }
+
+            // STAV 3: Senzory běží a hráč dorazil na místo (Zóna úspěchu s hysterezí)
+            if (isInTargetZone) {
+              return Center(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  margin: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.green.withValues(alpha: 0.4),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        size: 90,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "DORAZIL JSI NA MÍSTO!",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Artefakt zajištěn. Vyhledejte fyzickou schránku v okolí.",
+                        style: TextStyle(fontSize: 16, color: Colors.white70),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 25),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                  label: Text(_setupState, style: TextStyle(color: _textColor)),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 20,
-                    ),
-                    foregroundColor: _textColor,
-                    textStyle: const TextStyle(fontSize: 20),
+                        onPressed: () {
+                          // Resetujeme stav hystereze
+                          ref
+                              .read(targetZoneStatusProvider.notifier)
+                              .resetZone();
+                          // Smazáním cíle se aplikace automaticky přepne zpět na STAV 1 (Klávesnice)
+                          ref
+                              .read(destinationProvider.notifier)
+                              .clearDestination();
+                          // Pro další kód chceme, aby se GPS lock udělal rovnou,
+                          // senzory už jsou schválené prohlížečem, tak je můžeme nechat true
+                        },
+                        child: const Text(
+                          "Zadat další kód",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  onPressed: _setupState == "Zapnout senzory"
-                      ? () async {
-                          // Compass/Motion permission
-                          setState(() => _setupState = "Zapínání kompasu...");
-                          await requestWebSensorPermission();
-
-                          // GPS permission
-                          setState(() {
-                            _setupState = "Zapínání GPS...";
-                            _textColor = Colors.white;
-                          });
-                          await Geolocator.requestPermission();
-
-                          // First GPS fix
-                          setState(() => _setupState = "Získávání pozice...");
-                          await Geolocator.getCurrentPosition(
-                            locationSettings: const LocationSettings(
-                              accuracy: LocationAccuracy.best,
-                            ),
-                          ).catchError(
-                            (e) => print(e),
-                          ); // Catch errors if indoors
-
-                          // Refresh UI without overlay
-                          setState(() {
-                            _hasStarted = true;
-                          });
-                        }
-                      : null,
                 ),
-              ),
-            ),
-        ],
+              );
+            }
+
+            return const DirectionalArrow();
+          },
+        ),
       ),
     );
   }

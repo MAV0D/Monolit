@@ -39,7 +39,7 @@ Stream<Position> userLocation(Ref ref) async* {
     yield* Geolocator.getPositionStream(
       locationSettings: LocationSettings(
         accuracy: LocationAccuracy.best,
-        distanceFilter: 1,
+        distanceFilter: 5,
       ),
     );
   }

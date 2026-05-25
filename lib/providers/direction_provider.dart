@@ -13,7 +13,7 @@ double? relativeHeading(Ref ref) {
   final userHeading = ref.watch(webCompassProvider).value ?? 0.0;
   final destination = ref.watch(destinationProvider);
 
-  if (userLocation == null) return null;
+  if (userLocation == null || destination == null) return null;
 
   final targetHeading = Geolocator.bearingBetween(
     userLocation.latitude,
@@ -25,6 +25,25 @@ double? relativeHeading(Ref ref) {
   return targetHeading - userHeading;
 }
 
+@riverpod
+double? distanceToDestination(Ref ref) {
+  final userLocation = ref.watch(userLocationProvider).value;
+  final destination = ref.watch(destinationProvider);
+
+  if (userLocation == null || destination == null) return null;
+
+  final distance = Geolocator.distanceBetween(
+    userLocation.latitude,
+    userLocation.longitude,
+    destination.lat,
+    destination.lon,
+  );
+
+  ref.read(targetZoneStatusProvider.notifier).updateStatus(distance);
+
+  return distance;
+}
+
 class LatLon {
   final double lat;
   final double lon;
@@ -34,11 +53,44 @@ class LatLon {
 @riverpod
 class Destination extends _$Destination {
   @override
-  LatLon build() {
-    return LatLon(49.19479401856215, 16.60859699183198);
+  LatLon? build() {
+    return null;
   }
 
   void updateDestination(double lat, double lon) {
     state = LatLon(lat, lon);
   }
+
+  void clearDestination() {
+    state = null;
+  }
 }
+
+@riverpod
+class TargetZoneStatus extends _$TargetZoneStatus {
+  @override
+  bool build() {
+    // Výchozí stav je, že hráč v cíli není
+    return false;
+  }
+
+  void updateStatus(double distance) {
+    // 1. Pokud je hráč venku a přiblíží se pod 15 metrů -> Vstoupil do cíle
+    if (!state && distance <= 15.0) {
+      state = true;
+    }
+    // 2. Pokud už je v cíli, ale vzdálí se nad 25 metrů -> Opustil cíl
+    else if (state && distance > 25.0) {
+      state = false;
+    }
+  }
+
+  void resetZone() {
+    state = false;
+  }
+}
+
+Map<String, LatLon> larpDatabase = {
+  "0123": LatLon(54.89686701139079, 23.969021499723920),
+  "4567": LatLon(54.88202643885115, 23.969924360645024),
+};

@@ -48,12 +48,55 @@ final class RelativeHeadingProvider
   }
 }
 
-String _$relativeHeadingHash() => r'1dc0ef06285e03ecd24d2bb5a9454b03b698ba64';
+String _$relativeHeadingHash() => r'79da05d82859a5d1e2707166a0db8f827a9da542';
+
+@ProviderFor(distanceToDestination)
+final distanceToDestinationProvider = DistanceToDestinationProvider._();
+
+final class DistanceToDestinationProvider
+    extends $FunctionalProvider<double?, double?, double?>
+    with $Provider<double?> {
+  DistanceToDestinationProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'distanceToDestinationProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$distanceToDestinationHash();
+
+  @$internal
+  @override
+  $ProviderElement<double?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  double? create(Ref ref) {
+    return distanceToDestination(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(double? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<double?>(value),
+    );
+  }
+}
+
+String _$distanceToDestinationHash() =>
+    r'bed7a5b2b7a83750d3f7725f1c742d4c213777fb';
 
 @ProviderFor(Destination)
 final destinationProvider = DestinationProvider._();
 
-final class DestinationProvider extends $NotifierProvider<Destination, LatLon> {
+final class DestinationProvider
+    extends $NotifierProvider<Destination, LatLon?> {
   DestinationProvider._()
     : super(
         from: null,
@@ -73,27 +116,79 @@ final class DestinationProvider extends $NotifierProvider<Destination, LatLon> {
   Destination create() => Destination();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(LatLon value) {
+  Override overrideWithValue(LatLon? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<LatLon>(value),
+      providerOverride: $SyncValueProvider<LatLon?>(value),
     );
   }
 }
 
-String _$destinationHash() => r'9b052785e3516b03e08c9dd07f716ca71bd3418b';
+String _$destinationHash() => r'bb20f1fe37216e25065d1168986385f25d8ff5c8';
 
-abstract class _$Destination extends $Notifier<LatLon> {
-  LatLon build();
+abstract class _$Destination extends $Notifier<LatLon?> {
+  LatLon? build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<LatLon, LatLon>;
+    final ref = this.ref as $Ref<LatLon?, LatLon?>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<LatLon, LatLon>,
-              LatLon,
+              AnyNotifier<LatLon?, LatLon?>,
+              LatLon?,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(TargetZoneStatus)
+final targetZoneStatusProvider = TargetZoneStatusProvider._();
+
+final class TargetZoneStatusProvider
+    extends $NotifierProvider<TargetZoneStatus, bool> {
+  TargetZoneStatusProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'targetZoneStatusProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$targetZoneStatusHash();
+
+  @$internal
+  @override
+  TargetZoneStatus create() => TargetZoneStatus();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$targetZoneStatusHash() => r'aa03e06a320a6f4bd17b03a7b98219e44c99d849';
+
+abstract class _$TargetZoneStatus extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
               Object?,
               Object?
             >;

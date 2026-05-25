@@ -14,7 +14,20 @@ class SymbolKeyboardInput extends ConsumerStatefulWidget {
 
 class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
   // Definice symbolů na klávesnici
-  final List<String> _symbols = ["0", "1", "2", "3", "4", "5", "6", "7"];
+  final List<String> _symbols = [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "A",
+    "B",
+  ];
 
   // 4-místný kód (můžete změnit délku změnou velikosti listu)
   final List<String> _enteredCode = ["", "", "", ""];
@@ -97,12 +110,12 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
             );
           }),
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 50),
 
         // keyboard
         SizedBox(
-          height: 240,
-          width: 240,
+          height: 325,
+          width: 325,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -112,8 +125,8 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                 final double angle =
                     (index * 2 * math.pi / _symbols.length) -
                     (math.pi / 2) +
-                    math.pi / 16;
-                const double radius = 90.0; // Poloměr kruhu klávesnice
+                    math.pi / 12;
+                const double radius = 150; // Poloměr kruhu klávesnice
 
                 return Transform.translate(
                   offset: Offset(
@@ -155,7 +168,7 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 50),
 
         // submit
         ElevatedButton.icon(

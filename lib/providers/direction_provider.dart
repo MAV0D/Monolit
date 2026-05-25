@@ -93,4 +93,5 @@ class TargetZoneStatus extends _$TargetZoneStatus {
 Map<String, LatLon> larpDatabase = {
   "0123": LatLon(54.89686701139079, 23.969021499723920),
   "4567": LatLon(54.88202643885115, 23.969924360645024),
+  "89AB": LatLon(54.90588721480218, 23.964222218679830),
 };

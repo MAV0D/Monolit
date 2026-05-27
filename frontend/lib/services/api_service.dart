@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:5000/api";
+  static const String baseUrl = "/api";
 
   static Future<Map<String, double>?> verifyCode(String code) async {
     try {

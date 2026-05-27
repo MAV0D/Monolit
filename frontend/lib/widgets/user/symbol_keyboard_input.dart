@@ -139,8 +139,18 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                   ),
                   child: _enteredCode[index].isNotEmpty
                       ? Image.asset(
-                          _symbolImages[_enteredCode[index]]!,
+                          _symbolImages[_enteredCode[index]] ??
+                              "assets/sym_$index.png", // Bezpečná pojistka
                           fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Pokud by soubor fyzicky chyběl, vykreslí se aspoň otazník nebo text
+                            return const Center(
+                              child: Text(
+                                "?",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            );
+                          },
                         )
                       : null,
                 ),
@@ -183,8 +193,20 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                       ),
                       onPressed: () => _onSymbolTap(_symbols[index]),
                       child: Image.asset(
-                        _symbolImages[_symbols[index]]!,
+                        _symbolImages[_symbols[index].toString()] ??
+                            "assets/sym_3.png",
                         fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Text(
+                              _symbols[index],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),

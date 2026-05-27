@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/direction_provider.dart';
+import '../../services/api_service.dart';
+import '../../providers/direction_provider.dart';
 
 class SymbolKeyboardInput extends ConsumerStatefulWidget {
-  final VoidCallback onCodeAccepted; // <--- Přidat toto
+  final VoidCallback onCodeAccepted;
   const SymbolKeyboardInput({super.key, required this.onCodeAccepted});
 
   @override
@@ -31,17 +32,17 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
 
   final Map<String, String> _symbolImages = {
     "0": "assets/sym_0.png",
-    "1": "assets/sym_0.png",
-    "2": "assets/sym_0.png",
-    "3": "assets/sym_0.png",
-    "4": "assets/sym_0.png",
-    "5": "assets/sym_0.png",
-    "6": "assets/sym_0.png",
-    "7": "assets/sym_0.png",
-    "8": "assets/sym_0.png",
-    "9": "assets/sym_0.png",
-    "A": "assets/sym_0.png",
-    "B": "assets/sym_0.png",
+    "1": "assets/sym_1.png",
+    "2": "assets/sym_2.png",
+    "3": "assets/sym_3.png",
+    "4": "assets/sym_4.png",
+    "5": "assets/sym_5.png",
+    "6": "assets/sym_6.png",
+    "7": "assets/sym_7.png",
+    "8": "assets/sym_8.png",
+    "9": "assets/sym_9.png",
+    "A": "assets/sym_A.png",
+    "B": "assets/sym_B.png",
   };
 
   final List<String> _enteredCode = [
@@ -83,28 +84,29 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
     });
   }
 
-  void _submitCode() {
+  void _submitCode() async {
     final fullCode = _enteredCode.join();
     if (fullCode.length != 12) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Monolit nelze aktivovat.")));
-    } else if (larpDatabase.containsKey(fullCode)) {
-      final target = larpDatabase[fullCode]!;
-      ref
-          .read(destinationProvider.notifier)
-          .updateDestination(target.lat, target.lon);
+      return;
+    }
+    final coordinates = await ApiService.verifyCode(fullCode);
 
-      widget.onCodeAccepted();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Aktivace monolitu úspěšná. Jste přenášeni.")),
-      );
-    } else {
+    if (coordinates == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Monolit nelze aktivovat.")));
+      return;
     }
+
+    ref
+        .read(destinationProvider.notifier)
+        .updateDestination(coordinates["lat"]!, coordinates["lon"]!);
+
+    widget.onCodeAccepted();
   }
 
   @override
@@ -175,7 +177,7 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shape: const CircleBorder(),
-                        padding: EdgeInsets.all(6),
+                        padding: EdgeInsets.all(12),
                         backgroundColor: const Color(0xFF1F1F1F),
                         side: const BorderSide(color: Colors.red, width: 1),
                       ),

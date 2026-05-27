@@ -15,30 +15,6 @@ class TrackingEnabled extends _$TrackingEnabled {
   void disable() => state = false;
 }
 
-Future<bool> _getPermission() async {
-  bool serviceEnabled;
-  LocationPermission permission;
-
-  serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  if (!serviceEnabled) {
-    return Future.error('Poskytování lokace vypnuto.');
-  }
-
-  permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-      return Future.error('Poskytování lokace zamítnuto');
-    }
-  }
-
-  if (permission == LocationPermission.deniedForever) {
-    return Future.error('Poskytování lokace zamítnoto navždy.');
-  }
-
-  return true;
-}
-
 @riverpod
 Stream<Position> userLocation(Ref ref) {
   // Sledujeme náš nový jistič
@@ -77,7 +53,5 @@ Future<void> requestWebSensorPermission() async {
         }
       }
     }
-  } catch (e) {
-    print("Sensor permission error: $e");
-  }
+  } catch (e) {}
 }

@@ -1,6 +1,6 @@
-import '../providers/direction_provider.dart';
-import '../providers/location_provider.dart';
-import '../providers/web_compass_provider.dart';
+import '../../providers/direction_provider.dart';
+import '../../providers/location_provider.dart';
+import '../../providers/web_compass_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 

@@ -1,36 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'widgets/directional_arrow.dart';
-import 'widgets/symbol_keyboard_input.dart';
 import 'package:geolocator/geolocator.dart';
-import 'providers/location_provider.dart';
-import 'providers/direction_provider.dart';
+import '../widgets/user/directional_arrow.dart';
+import '../widgets/user/symbol_keyboard_input.dart';
+import '../providers/location_provider.dart';
+import '../providers/direction_provider.dart';
 
-void main() {
-  runApp(const ProviderScope(child: MyApp()));
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class UserScreen extends ConsumerStatefulWidget {
+  const UserScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Monolitní navigace',
-      theme: ThemeData.dark(),
-      home: const NavigationScreen(),
-    );
-  }
+  ConsumerState<UserScreen> createState() => _UserScreenState();
 }
 
-class NavigationScreen extends ConsumerStatefulWidget {
-  const NavigationScreen({super.key});
-
-  @override
-  ConsumerState<NavigationScreen> createState() => _NavigationScreenState();
-}
-
-class _NavigationScreenState extends ConsumerState<NavigationScreen> {
+class _UserScreenState extends ConsumerState<UserScreen> {
   bool _sensorsInitialized = false;
   String _setupState = "";
   late final AppLifecycleListener _lifecycleListener;
@@ -94,9 +77,7 @@ class _NavigationScreenState extends ConsumerState<NavigationScreen> {
           accuracy: LocationAccuracy.best,
         ),
       );
-    } catch (e) {
-      print("Chyba prvního fixu: $e");
-    }
+    } catch (e) {}
 
     setState(() {
       _sensorsInitialized = true;

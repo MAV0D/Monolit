@@ -42,6 +42,16 @@ class _UserScreenState extends ConsumerState<UserScreen> {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    for (int i = 0; i < 10; i++) {
+      precacheImage(AssetImage("assets/sym_$i.png"), context);
+    }
+    precacheImage(const AssetImage("assets/sym_A.png"), context);
+    precacheImage(const AssetImage("assets/sym_B.png"), context);
+  }
+
   void _handleAppReturn() async {
     if (_isFirstLoad) {
       _isFirstLoad = false;

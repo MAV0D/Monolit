@@ -81,14 +81,18 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     return Center(
       child: Column(
         children: [
-          RepaintBoundary(
-            child: RotationTransition(
-              turns: _controller,
-              child: Image.asset(
-                "assets/monolit.png",
-                width: 250,
-                height: 250,
-                fit: BoxFit.contain,
+          SizedBox(
+            width: 250,
+            height: 250,
+            child: RepaintBoundary(
+              child: RotationTransition(
+                turns: _controller,
+                child: Image.asset(
+                  "assets/monolit.png",
+                  width: 250,
+                  height: 250,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),

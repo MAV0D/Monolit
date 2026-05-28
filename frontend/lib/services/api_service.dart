@@ -1,8 +1,11 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
-  static const String baseUrl = "/api";
+  static const String baseUrl = kDebugMode
+      ? "http://localhost:5000/api"
+      : "/api";
 
   static Future<Map<String, double>?> verifyCode(String code) async {
     try {

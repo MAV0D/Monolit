@@ -2,13 +2,13 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 from functools import wraps
-
+import os
 
 app = Flask(__name__)
 CORS(app)
 
 # Admin password
-ADMIN_PASSWORD = "admin123"
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 ADMIN_TOKEN = "*LZscYCzXCFSH0$^R93C*rCez2*DCv$W"
 
 # ========== HELPER FUNCTIONS ===========

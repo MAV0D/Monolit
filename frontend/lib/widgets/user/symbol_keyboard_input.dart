@@ -45,20 +45,7 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
     "B": "assets/sym_B.png",
   };
 
-  final List<String> _enteredCode = [
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-  ];
+  final List<String> _enteredCode = List.generate(12, (_) => "");
   int _currentFocusIndex = 0;
 
   void _onSymbolTap(String symbol) {

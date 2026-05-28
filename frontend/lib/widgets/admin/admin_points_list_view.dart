@@ -163,6 +163,31 @@ class _AdminPointsListViewState extends ConsumerState<AdminPointsListView> {
     );
   }
 
+  String _parseCode(String code) {
+    String parsedCode = "";
+
+    Map<String, String> symbolBigrams = {
+      "0": "Aa",
+      "1": "Mi",
+      "2": "Si",
+      "3": "Or",
+      "4": "Ve",
+      "5": "Lu",
+      "6": "Au",
+      "7": "Ti",
+      "8": "Cl",
+      "9": "Oc",
+      "A": "Ca",
+      "B": "La",
+    };
+
+    for (String char in code.split('')) {
+      parsedCode += symbolBigrams[char]!;
+    }
+
+    return parsedCode;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -277,7 +302,7 @@ class _AdminPointsListViewState extends ConsumerState<AdminPointsListView> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Kód: ${place["code"]}",
+                                "Kód: ${_parseCode(place["code"])}",
                                 style: const TextStyle(
                                   color: Colors.grey,
                                   fontFamily: 'monospace',

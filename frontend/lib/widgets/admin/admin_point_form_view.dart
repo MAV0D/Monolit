@@ -59,7 +59,14 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
 
     if (_formKey.currentState!.validate()) {
       final String name = _nameController.text;
-      final String code = _codeController.text;
+      String? code = _codeController.text;
+      code = _parseCode(code, false);
+      if (code == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Byl zadán neplatný kód. ")));
+        return;
+      }
       final double lat = double.parse(_latController.text);
       final double lon = double.parse(_lonController.text);
 
@@ -85,10 +92,48 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
     }
   }
 
+  String? _parseCode(String code, bool reverse) {
+    String parsedCode = "";
+
+    Map<String, String> symbolBigrams = {
+      "Aa": "0",
+      "Mi": "1",
+      "Si": "2",
+      "Or": "3",
+      "Ve": "4",
+      "Lu": "5",
+      "Au": "6",
+      "Ti": "7",
+      "Cl": "8",
+      "Oc": "9",
+      "Ca": "A",
+      "La": "B",
+    };
+    int chunkSize = 2;
+    if (reverse) {
+      chunkSize = 1;
+      symbolBigrams = symbolBigrams.map((key, value) => MapEntry(value, key));
+    }
+
+    for (int i = 0; i < code.length; i += chunkSize) {
+      int end = i + chunkSize;
+      String bigram = code.substring(i, end);
+
+      if (symbolBigrams.containsKey(bigram)) {
+        parsedCode += symbolBigrams[bigram]!;
+      } else {
+        return null;
+      }
+    }
+
+    return parsedCode;
+  }
+
   void _initializeControllers(Map<String, dynamic> data) {
     if (_isFieldsInitialized) return;
     _nameController.text = data['name'] ?? '';
-    _codeController.text = data['code'] ?? '';
+    String code = data['code'] ?? '';
+    _codeController.text = _parseCode(code, true)!;
     _latController.text = (data['latitude'] ?? '').toString();
     _lonController.text = (data['longitude'] ?? '').toString();
     _isFieldsInitialized = true;
@@ -183,13 +228,13 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
             ),
             const SizedBox(height: 15),
 
-            // 2. Pole pro 12místný kód symbolů
+            // 2. Pole pro 24místný kód zkratek
             TextFormField(
               controller: _codeController,
               style: const TextStyle(color: Colors.white),
-              maxLength: 12,
+              maxLength: 24,
               decoration: const InputDecoration(
-                labelText: "12místný kód (např. 0123A5B67890)",
+                labelText: "Kód monolitu (např. AaMiSiOrVeLuAuTiClOcCaLa",
                 labelStyle: TextStyle(color: Colors.grey),
                 counterStyle: TextStyle(color: Colors.grey),
                 enabledBorder: UnderlineInputBorder(
@@ -200,7 +245,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
                 ),
               ),
               validator: (val) =>
-                  val!.length != 12 ? "Kód musí mít přesně 12 znaků" : null,
+                  val!.length != 24 ? "Kód musí mít přesně 24 znaků" : null,
             ),
             const SizedBox(height: 15),
 

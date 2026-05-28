@@ -20,13 +20,15 @@ class _UserScreenState extends ConsumerState<UserScreen> {
   late final AppLifecycleListener _lifecycleListener;
 
   bool _isFirstLoad = true;
+
   String _enteredCodeFromKeyboard = "";
+
+  DateTime? _startTime;
+  String _finalDurationText = "";
 
   @override
   void initState() {
     super.initState();
-
-    // Inicializace posluchače na minimalizaci/maximalizaci aplikace
     _lifecycleListener = AppLifecycleListener(
       onResume: () {
         _handleAppReturn();
@@ -36,7 +38,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
 
   @override
   void dispose() {
-    _lifecycleListener.dispose(); // <--- Nezapomenout uklidit
+    _lifecycleListener.dispose();
     super.dispose();
   }
 
@@ -87,6 +89,12 @@ class _UserScreenState extends ConsumerState<UserScreen> {
     });
   }
 
+  String _formatDuration(Duration duration) {
+    String minutes = duration.inMinutes.toString().padLeft(2, '0');
+    String seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return "$minutes:$seconds";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,6 +104,13 @@ class _UserScreenState extends ConsumerState<UserScreen> {
           builder: (context, ref, child) {
             final destination = ref.watch(destinationProvider);
             final isInTargetZone = ref.watch(targetZoneStatusProvider);
+
+            if (isInTargetZone &&
+                _startTime != null &&
+                _finalDurationText.isEmpty) {
+              final duration = DateTime.now().difference(_startTime!);
+              _finalDurationText = _formatDuration(duration);
+            }
 
             if (destination != null && !_sensorsInitialized) {
               return Center(
@@ -137,6 +152,8 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                           _enteredCodeFromKeyboard = code;
                         },
                         onCodeAccepted: () async {
+                          _initializeSensors();
+
                           if (_enteredCodeFromKeyboard.length != 12) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -169,7 +186,8 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                                 coordinates["lon"]!,
                               );
 
-                          _initializeSensors();
+                          _startTime = DateTime.now();
+                          _finalDurationText = ""; // Reset předchozího času
                         },
                       ),
                     ],
@@ -217,7 +235,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        "Puf, jsi na místě!",
+                        "Dorazili jste na místo!",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -225,9 +243,9 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        "Jakmile najdeš fyzicky umístěný monolit zhmotníš se v reálném světe, monolit je označeny XXXYYY.",
+                      const SizedBox(height: 15),
+                      Text(
+                        "Jakmile najdete monolit, nastavte si budík na $_finalDurationText minut - po tuto dobu vás v okolí monolitu nikdo nemůže rušit.",
                         style: TextStyle(fontSize: 16, color: Colors.white70),
                         textAlign: TextAlign.center,
                       ),
@@ -235,7 +253,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: Color(0xFF94002E),
+                          foregroundColor: const Color(0xFF94002E),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 32,
                             vertical: 12,
@@ -256,6 +274,8 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                           ref.read(trackingEnabledProvider.notifier).disable();
                           setState(() {
                             _sensorsInitialized = false;
+                            _startTime = null;
+                            _finalDurationText = "";
                           });
                         },
                         child: const Text(
@@ -271,7 +291,6 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                 ),
               );
             }
-
             return const DirectionalArrow();
           },
         ),

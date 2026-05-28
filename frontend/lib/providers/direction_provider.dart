@@ -66,34 +66,20 @@ class Destination extends _$Destination {
 class TargetZoneStatus extends _$TargetZoneStatus {
   @override
   bool build() {
-    // 1. Zaregistrujeme posluchače na provider vzdálenosti.
-    // Tento posluchač se spustí POKAŽDÉ, když se vzdálenost změní,
-    // ale spustí se až PO TOM, co se dokončí buildování okolních elementů.
     ref.listen<double?>(distanceToDestinationProvider, (previous, next) {
       if (next == null) return;
 
-      // Pokud jsme doteď byli VENKU (false) a přiblížili jsme se pod 15m -> jsme UVNITŘ
       if (!state && next <= 15.0) {
         state = true;
-      }
-      // Pokud jsme doteď byli UVNITŘ (true) a vzdálili jsme se nad 25m -> jsme VENKU
-      else if (state && next > 25.0) {
+      } else if (state && next > 25.0) {
         state = false;
       }
     });
 
-    // 2. Výchozí stav při prvním spuštění hry je false (hráč není v cíli)
     return false;
   }
 
-  // Tuto metodu zavoláme v main.dart, když hráč klikne na tlačítko "Zadat další kód"
   void resetZone() {
     state = false;
   }
 }
-
-Map<String, LatLon> larpDatabase = {
-  "111111111111": LatLon(54.89686701139079, 23.969021499723920),
-  "333333333333": LatLon(54.88202643885115, 23.969924360645024),
-  "222222222222": LatLon(54.90588721480218, 23.964222218679830),
-};

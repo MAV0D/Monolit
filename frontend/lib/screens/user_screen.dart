@@ -5,6 +5,7 @@ import '../widgets/user/directional_arrow.dart';
 import '../widgets/user/symbol_keyboard_input.dart';
 import '../providers/location_provider.dart';
 import '../providers/direction_provider.dart';
+import '../services/api_service.dart';
 
 class UserScreen extends ConsumerStatefulWidget {
   const UserScreen({super.key});
@@ -19,6 +20,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
   late final AppLifecycleListener _lifecycleListener;
 
   bool _isFirstLoad = true;
+  String _enteredCodeFromKeyboard = "";
 
   @override
   void initState() {
@@ -129,9 +131,44 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
-                      // Klávesnici předáme callback, který se spustí při úspěšném zadání
                       SymbolKeyboardInput(
-                        onCodeAccepted: () {
+                        submitButtonLabel: "Aktivovat monolit",
+                        onCodeChanged: (code) {
+                          _enteredCodeFromKeyboard = code;
+                        },
+                        onCodeAccepted: () async {
+                          if (_enteredCodeFromKeyboard.length != 12) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Monolit nelze aktivovat."),
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Volání API pro ověření 12místného kódu symbolů
+                          final coordinates = await ApiService.verifyCode(
+                            _enteredCodeFromKeyboard,
+                          );
+
+                          if (coordinates == null) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Monolit nelze aktivovat."),
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Pokud je kód správný, aktualizujeme souřadnice v Riverpodu
+                          ref
+                              .read(destinationProvider.notifier)
+                              .updateDestination(
+                                coordinates["lat"]!,
+                                coordinates["lon"]!,
+                              );
+
                           _initializeSensors();
                         },
                       ),

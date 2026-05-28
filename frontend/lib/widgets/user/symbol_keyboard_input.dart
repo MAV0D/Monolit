@@ -1,20 +1,27 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/api_service.dart';
-import '../../providers/direction_provider.dart';
 
-class SymbolKeyboardInput extends ConsumerStatefulWidget {
-  final VoidCallback onCodeAccepted;
-  const SymbolKeyboardInput({super.key, required this.onCodeAccepted});
+class SymbolKeyboardInput extends StatefulWidget {
+  final VoidCallback?
+  onCodeAccepted; // Pro hráče: Spustí se po stisku hlavního tlačítka
+  final Function(String)?
+  onCodeChanged; // Pro admina: Volá se při každé změně kódu
+  final String submitButtonLabel; // Přizpůsobitelný text tlačítka
+  final String? initialCode; // Možnost předvyplnit kód (např. při editaci)
+
+  const SymbolKeyboardInput({
+    super.key,
+    this.onCodeAccepted,
+    this.onCodeChanged,
+    this.submitButtonLabel = "Aktivovat monolit",
+    this.initialCode,
+  });
 
   @override
-  ConsumerState<SymbolKeyboardInput> createState() =>
-      _SymbolKeyboardInputState();
+  State<SymbolKeyboardInput> createState() => _SymbolKeyboardInputState();
 }
 
-class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
-  // Definice symbolů na klávesnici
+class _SymbolKeyboardInputState extends State<SymbolKeyboardInput> {
   final List<String> _symbols = [
     "0",
     "1",
@@ -45,19 +52,36 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
     "B": "assets/sym_B.png",
   };
 
-  final List<String> _enteredCode = List.generate(12, (_) => "");
+  late List<String> _enteredCode;
   int _currentFocusIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _enteredCode = List.generate(12, (_) => "");
+    if (widget.initialCode != null && widget.initialCode!.length == 12) {
+      for (int i = 0; i < 12; i++) {
+        _enteredCode[i] = widget.initialCode![i];
+      }
+    }
+  }
+
+  void _notifyChanged() {
+    if (widget.onCodeChanged != null) {
+      widget.onCodeChanged!(_enteredCode.join());
+    }
+  }
 
   void _onSymbolTap(String symbol) {
     if (_currentFocusIndex >= _enteredCode.length) return;
 
     setState(() {
       _enteredCode[_currentFocusIndex] = symbol;
-      // Automatický posun na další pole
       if (_currentFocusIndex < _enteredCode.length - 1) {
         _currentFocusIndex++;
       }
     });
+    _notifyChanged();
   }
 
   void _onDelete() {
@@ -69,31 +93,7 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
         _enteredCode[_currentFocusIndex] = "";
       }
     });
-  }
-
-  void _submitCode() async {
-    final fullCode = _enteredCode.join();
-    if (fullCode.length != 12) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Monolit nelze aktivovat.")));
-      return;
-    }
-    final coordinates = await ApiService.verifyCode(fullCode);
-
-    if (coordinates == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Monolit nelze aktivovat.")));
-      return;
-    }
-
-    ref
-        .read(destinationProvider.notifier)
-        .updateDestination(coordinates["lat"]!, coordinates["lon"]!);
-
-    widget.onCodeAccepted();
+    _notifyChanged();
   }
 
   @override
@@ -101,7 +101,7 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // input fields
+        // Input fields
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(_enteredCode.length, (index) {
@@ -112,7 +112,7 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                 child: Container(
                   width: 50,
                   height: 60,
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.5),
@@ -127,17 +127,8 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                   child: _enteredCode[index].isNotEmpty
                       ? Image.asset(
                           _symbolImages[_enteredCode[index]] ??
-                              "assets/sym_$index.png", // Bezpečná pojistka
+                              "assets/sym_0.png",
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            // Pokud by soubor fyzicky chyběl, vykreslí se aspoň otazník nebo text
-                            return const Center(
-                              child: Text(
-                                "?",
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            );
-                          },
                         )
                       : null,
                 ),
@@ -145,23 +136,21 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
             );
           }),
         ),
-        const SizedBox(height: 50),
+        const SizedBox(height: 30),
 
-        // keyboard
+        // Keyboard
         SizedBox(
-          height: 325,
-          width: 325,
+          height: 300,
+          width: 300,
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Generování tlačítek do kruhu
               ...List.generate(_symbols.length, (index) {
-                // Výpočet úhlu pro každé tlačítko
                 final double angle =
                     (index * 2 * math.pi / _symbols.length) -
                     (math.pi / 2) +
                     math.pi / 12;
-                const double radius = 150; // Poloměr kruhu klávesnice
+                const double radius = 125;
 
                 return Transform.translate(
                   offset: Offset(
@@ -169,58 +158,44 @@ class _SymbolKeyboardInputState extends ConsumerState<SymbolKeyboardInput> {
                     radius * math.sin(angle),
                   ),
                   child: SizedBox(
-                    width: 50,
-                    height: 50,
+                    width: 45,
+                    height: 45,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shape: const CircleBorder(),
-                        padding: EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(10),
                         backgroundColor: const Color(0xFF1F1F1F),
                         side: const BorderSide(color: Colors.red, width: 1),
                       ),
                       onPressed: () => _onSymbolTap(_symbols[index]),
                       child: Image.asset(
-                        _symbolImages[_symbols[index].toString()] ??
-                            "assets/sym_3.png",
+                        _symbolImages[_symbols[index]] ?? "assets/sym_0.png",
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Text(
-                              _symbols[index],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                              ),
-                            ),
-                          );
-                        },
                       ),
                     ),
                   ),
                 );
               }),
-
-              // deletion button
               IconButton(
                 icon: const Icon(
                   Icons.backspace,
                   color: Colors.redAccent,
-                  size: 30,
+                  size: 26,
                 ),
                 onPressed: _onDelete,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 50),
-
-        // submit
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          onPressed: _submitCode,
-          icon: const Icon(Icons.radar),
-          label: const Text("Aktivovat monolit"),
-        ),
+        if (widget.onCodeAccepted != null) ...[
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: widget.onCodeAccepted,
+            icon: const Icon(Icons.radar),
+            label: Text(widget.submitButtonLabel),
+          ),
+        ],
       ],
     );
   }

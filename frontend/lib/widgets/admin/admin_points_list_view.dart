@@ -182,8 +182,9 @@ class _AdminPointsListViewState extends ConsumerState<AdminPointsListView> {
     };
 
     for (String char in code.split('')) {
-      parsedCode += symbolBigrams[char]!;
+      parsedCode += "${symbolBigrams[char]!}-";
     }
+    parsedCode = parsedCode.substring(0, parsedCode.length - 1);
 
     return parsedCode;
   }
@@ -324,6 +325,13 @@ class _AdminPointsListViewState extends ConsumerState<AdminPointsListView> {
                           activeThumbColor: Colors.red,
                           onChanged: (bool newValue) {
                             setState(() => place["active"] = newValue ? 1 : 0);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "Monolit byl ${newValue ? "" : "de"}aktivován.",
+                                ),
+                              ),
+                            );
                             _changeState(place["id"], newValue);
                           },
                         ),

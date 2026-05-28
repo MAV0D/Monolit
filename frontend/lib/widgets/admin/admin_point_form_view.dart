@@ -3,6 +3,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:monolit_gps/services/api_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/admin_token_provider.dart';
+import '../../widgets/user/symbol_keyboard_input.dart';
+import 'package:flutter/services.dart';
 
 class AdminPointFormView extends ConsumerStatefulWidget {
   final int? editPlaceId;
@@ -21,6 +23,9 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
   final _lonController = TextEditingController();
   Future<Map<String, dynamic>?>? _initialDataFuture;
   bool _isFieldsInitialized = false;
+
+  bool _useKeyboardInput = false;
+  String _currentRawCode = ""; // Drží vnitřní 12místný kód (0-B)
 
   @override
   void initState() {
@@ -59,7 +64,8 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
 
     if (_formKey.currentState!.validate()) {
       final String name = _nameController.text;
-      String? code = _codeController.text;
+      String? code = _codeController.text.replaceAll('-', '');
+
       code = _parseCode(code, false);
       if (code == null) {
         ScaffoldMessenger.of(
@@ -121,6 +127,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
 
       if (symbolBigrams.containsKey(bigram)) {
         parsedCode += symbolBigrams[bigram]!;
+        if (reverse && end != code.length) parsedCode += "-";
       } else {
         return null;
       }
@@ -133,6 +140,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
     if (_isFieldsInitialized) return;
     _nameController.text = data['name'] ?? '';
     String code = data['code'] ?? '';
+    _currentRawCode = code;
     _codeController.text = _parseCode(code, true)!;
     _latController.text = (data['latitude'] ?? '').toString();
     _lonController.text = (data['longitude'] ?? '').toString();
@@ -143,6 +151,19 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
     final token = ref.read(adminTokenProvider)!;
     final result = await ApiService.getPoint(token, id);
     return result;
+  }
+
+  void _handleCoordinatePaste(String value) {
+    final RegExp coordRegex = RegExp(r'-?\d+\.\d+');
+    final matches = coordRegex.allMatches(value).toList();
+
+    if (matches.length == 2) {
+      setState(() {
+        _latController.text = matches[0].group(0)!;
+        _lonController.text = matches[1].group(0)!;
+      });
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
   }
 
   @override
@@ -229,24 +250,91 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
             const SizedBox(height: 15),
 
             // 2. Pole pro 24místný kód zkratek
-            TextFormField(
-              controller: _codeController,
-              style: const TextStyle(color: Colors.white),
-              maxLength: 24,
-              decoration: const InputDecoration(
-                labelText: "Kód monolitu (např. AaMiSiOrVeLuAuTiClOcCaLa",
-                labelStyle: TextStyle(color: Colors.grey),
-                counterStyle: TextStyle(color: Colors.grey),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Způsob zadání kódu:",
+                  style: TextStyle(color: Colors.grey),
                 ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.red),
+                Row(
+                  children: [
+                    ChoiceChip(
+                      label: const Text("Textově"),
+                      selected: !_useKeyboardInput,
+                      onSelected: (val) {
+                        setState(() => _useKeyboardInput = false);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: const Text("Klávesnicí"),
+                      selected: _useKeyboardInput,
+                      onSelected: (val) {
+                        setState(() => _useKeyboardInput = true);
+                      },
+                    ),
+                  ],
                 ),
-              ),
-              validator: (val) =>
-                  val!.length != 24 ? "Kód musí mít přesně 24 znaků" : null,
+              ],
             ),
+            const SizedBox(height: 15),
+
+            // PODMÍNĚNÉ ZOBRAZENÍ VSTUPU
+            if (!_useKeyboardInput) ...[
+              TextFormField(
+                controller: _codeController,
+                style: const TextStyle(color: Colors.white),
+                maxLength: 35, // 24 znaků zkratek + 11 automatických pomlček
+                inputFormatters: [BigramInputFormatter()],
+                decoration: const InputDecoration(
+                  labelText: "Kód monolitu (formát: Aa-Mi-Si...)",
+                  labelStyle: TextStyle(color: Colors.grey),
+                  counterStyle: TextStyle(color: Colors.grey),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.red),
+                  ),
+                ),
+                validator: (val) {
+                  if (val == null) return "Zadej kód";
+                  final cleanCode = val.replaceAll('-', '');
+                  if (cleanCode.length != 24) {
+                    return "Kód musí obsahovat přesně 24 písmen.";
+                  }
+                  return null;
+                },
+              ),
+            ] else ...[
+              const Text(
+                "Klikatelná klávesnice symbolů:",
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              SymbolKeyboardInput(
+                initialCode: _currentRawCode.length == 12
+                    ? _currentRawCode
+                    : null,
+                onCodeChanged: (newRawCode) {
+                  _currentRawCode = newRawCode;
+                  setState(() {
+                    _codeController.text = _parseCode(newRawCode, true)!;
+                  });
+                },
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Přepsaný kód: ${_codeController.text}",
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: 15),
 
             // 3. Řada pro souřadnice
@@ -277,6 +365,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
                       }
                       return null;
                     },
+                    onChanged: _handleCoordinatePaste,
                   ),
                 ),
                 const SizedBox(width: 15),
@@ -348,6 +437,58 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class BigramInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final String newText = newValue.text;
+    if (newText.isEmpty) return newValue;
+
+    String oldClean = oldValue.text.replaceAll('-', '');
+    String newClean = newText.replaceAll('-', '');
+
+    if (newClean.length > 24) {
+      newClean = newClean.substring(0, 24);
+    }
+
+    int cleanDelta = newClean.length - oldClean.length;
+
+    int oldDashesBefore = oldValue.selection.end > 0
+        ? (oldValue.selection.end - 1) ~/ 3
+        : 0;
+    int oldCleanSelection = oldValue.selection.end - oldDashesBefore;
+    int cleanSelectionIndex = oldCleanSelection + cleanDelta;
+
+    if (cleanSelectionIndex < 0) cleanSelectionIndex = 0;
+    if (cleanSelectionIndex > newClean.length) {
+      cleanSelectionIndex = newClean.length;
+    }
+
+    final List<String> chunks = [];
+    for (int i = 0; i < newClean.length; i += 2) {
+      int end = (i + 2 <= newClean.length) ? i + 2 : newClean.length;
+      chunks.add(newClean.substring(i, end));
+    }
+    String formattedText = chunks.join('-');
+
+    int newSelectionIndex = cleanSelectionIndex;
+    if (cleanSelectionIndex > 0) {
+      newSelectionIndex += (cleanSelectionIndex - 1) ~/ 2;
+    }
+
+    if (newSelectionIndex > formattedText.length) {
+      newSelectionIndex = formattedText.length;
+    }
+
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: newSelectionIndex),
     );
   }
 }

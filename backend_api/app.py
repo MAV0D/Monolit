@@ -66,7 +66,7 @@ def point_location():
     
     c.execute('''SELECT latitude, longitude
                  FROM places
-                 WHERE code = ?
+                 WHERE code = ? AND active = true
                 ''', (code,))
     
     point = c.fetchone()

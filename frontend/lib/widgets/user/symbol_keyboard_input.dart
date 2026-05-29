@@ -52,6 +52,21 @@ class _SymbolKeyboardInputState extends State<SymbolKeyboardInput> {
     "B": "assets/sym_B.png",
   };
 
+  Map<String, String> symbolBigrams = {
+    "0": "Aa",
+    "1": "Mi",
+    "2": "Si",
+    "3": "Or",
+    "4": "Ve",
+    "5": "Lu",
+    "6": "Au",
+    "7": "Ti",
+    "8": "Cl",
+    "9": "Oc",
+    "A": "Ca",
+    "B": "La",
+  };
+
   late List<String> _enteredCode;
   int _currentFocusIndex = 0;
 
@@ -159,19 +174,28 @@ class _SymbolKeyboardInputState extends State<SymbolKeyboardInput> {
                   ),
                   child: SizedBox(
                     width: 45,
-                    height: 45,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(10),
-                        backgroundColor: const Color(0xFF1F1F1F),
-                        side: const BorderSide(color: Colors.red, width: 1),
-                      ),
-                      onPressed: () => _onSymbolTap(_symbols[index]),
-                      child: Image.asset(
-                        _symbolImages[_symbols[index]] ?? "assets/sym_0.png",
-                        fit: BoxFit.contain,
-                      ),
+                    height: 65,
+                    child: Column(
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(10),
+                            backgroundColor: const Color(0xFF1F1F1F),
+                            side: const BorderSide(color: Colors.red, width: 1),
+                          ),
+                          onPressed: () => _onSymbolTap(_symbols[index]),
+                          child: Image.asset(
+                            _symbolImages[_symbols[index]]!,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          symbolBigrams[_symbols[index]]!,
+                          style: TextStyle(color: Colors.grey, fontSize: 10),
+                        ),
+                      ],
                     ),
                   ),
                 );

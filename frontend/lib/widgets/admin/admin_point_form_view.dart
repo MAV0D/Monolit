@@ -261,17 +261,17 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
                   children: [
                     ChoiceChip(
                       label: const Text("Textově"),
-                      selected: !_useKeyboardInput,
+                      selected: _useKeyboardInput,
                       onSelected: (val) {
-                        setState(() => _useKeyboardInput = false);
+                        setState(() => _useKeyboardInput = true);
                       },
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
-                      label: const Text("Klávesnicí"),
-                      selected: _useKeyboardInput,
+                      label: const Text("Symboly"),
+                      selected: !_useKeyboardInput,
                       onSelected: (val) {
-                        setState(() => _useKeyboardInput = true);
+                        setState(() => _useKeyboardInput = false);
                       },
                     ),
                   ],
@@ -281,7 +281,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
             const SizedBox(height: 15),
 
             // PODMÍNĚNÉ ZOBRAZENÍ VSTUPU
-            if (!_useKeyboardInput) ...[
+            if (_useKeyboardInput) ...[
               TextFormField(
                 controller: _codeController,
                 style: const TextStyle(color: Colors.white),

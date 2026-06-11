@@ -309,7 +309,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
               ),
             ] else ...[
               const Text(
-                "Klikatelná klávesnice symbolů:",
+                "Klávesnice symbolů:",
                 style: TextStyle(color: Colors.grey, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
@@ -348,7 +348,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
                       decimal: true,
                     ),
                     decoration: const InputDecoration(
-                      labelText: "Latitude (Zem. šířka)",
+                      labelText: "Zem. šířka (Latitude)",
                       labelStyle: TextStyle(color: Colors.grey),
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.red),
@@ -377,7 +377,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
                       decimal: true,
                     ),
                     decoration: const InputDecoration(
-                      labelText: "Longitude (Zem. délka)",
+                      labelText: "Zem. délka (Longitude)",
                       labelStyle: TextStyle(color: Colors.grey),
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.red),

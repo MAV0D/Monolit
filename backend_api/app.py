@@ -8,7 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Admin password
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', "admin")
 ADMIN_TOKEN = "*LZscYCzXCFSH0$^R93C*rCez2*DCv$W"
 
 # ========== HELPER FUNCTIONS ===========
@@ -64,7 +64,7 @@ def point_location():
     conn = get_db()
     c = conn.cursor()
     
-    c.execute('''SELECT latitude, longitude
+    c.execute('''SELECT name, latitude, longitude
                  FROM places
                  WHERE code = ? AND active = true
                 ''', (code,))
@@ -75,6 +75,7 @@ def point_location():
     
     if point:
         return jsonify({
+            "name": point["name"],
             "lat": point["latitude"],
             "lon": point["longitude"],
         })

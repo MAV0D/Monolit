@@ -26,6 +26,8 @@ class _UserScreenState extends ConsumerState<UserScreen> {
   DateTime? _startTime;
   String _finalDurationText = "";
 
+  String _name = "";
+
   @override
   void initState() {
     super.initState();
@@ -188,12 +190,13 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                             return;
                           }
 
-                          // Pokud je kód správný, aktualizujeme souřadnice v Riverpodu
+                          _name = coordinates.remove("name")!;
+
                           ref
                               .read(destinationProvider.notifier)
                               .updateDestination(
-                                coordinates["lat"]!,
-                                coordinates["lon"]!,
+                                coordinates["lat"],
+                                coordinates["lon"],
                               );
 
                           _startTime = DateTime.now();
@@ -255,7 +258,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                       ),
                       const SizedBox(height: 15),
                       Text(
-                        "Jakmile najdete monolit, nastavte si budík na $_finalDurationText minut - po tuto dobu vás v okolí monolitu nikdo nemůže rušit.",
+                        "Jakmile najdete monolit označený $_name, nastavte si budík na $_finalDurationText minut - po tuto dobu vás v okolí monolitu nikdo nemůže rušit.",
                         style: TextStyle(fontSize: 16, color: Colors.white70),
                         textAlign: TextAlign.center,
                       ),

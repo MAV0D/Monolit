@@ -11,8 +11,12 @@ class DirectionalArrow extends ConsumerStatefulWidget {
 }
 
 class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _glowController;
+
+  double? _initialDistance;
+  int _lastDurationMs = 2500;
 
   @override
   void initState() {
@@ -24,11 +28,38 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
       lowerBound: double.negativeInfinity,
       upperBound: double.infinity,
     );
+
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+  }
+
+  void _adjustGlowSpeed(double distance) {
+    if (_initialDistance == null || _initialDistance == 0) return;
+
+    double ratio = (distance / _initialDistance!).clamp(0.0, 1.0);
+
+    int maxDuration = 2500;
+    int minDuration = 200;
+
+    int newDurationMs = (minDuration + (maxDuration - minDuration) * ratio)
+        .toInt();
+
+    if ((newDurationMs - _lastDurationMs).abs() > 20) {
+      _lastDurationMs = newDurationMs;
+      _glowController.duration = Duration(milliseconds: newDurationMs);
+
+      if (_glowController.isAnimating) {
+        _glowController.repeat(reverse: true);
+      }
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
@@ -40,17 +71,24 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
     final heading = ref.watch(relativeHeadingProvider);
     final distance = ref.watch(distanceToDestinationProvider);
 
+    if (_initialDistance == null && distance != null) {
+      _initialDistance = distance;
+    }
+
+    if (distance != null) {
+      _adjustGlowSpeed(distance);
+      if (!_glowController.isAnimating) {
+        _glowController.repeat(reverse: true);
+      }
+    }
+
     ref.listen<double?>(relativeHeadingProvider, (previous, next) {
       if (next == null) return;
 
-      // degrees to num
       double targetTurns = next / 360;
       double currentTurns = _controller.value;
-
-      // distance to new heading
       double delta = (targetTurns - currentTurns) % 1.0;
 
-      // choosing shortest path
       if (delta > 0.5) {
         delta -= 1.0;
       } else if (delta < -0.5) {
@@ -60,7 +98,6 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
       _controller.animateTo(currentTurns + delta, curve: Curves.easeOut);
     });
 
-    // loading state
     if (heading == null || locationAsync.isLoading || compassAsync.isLoading) {
       return Center(
         child: Column(
@@ -87,19 +124,28 @@ class _DirectionalArrowState extends ConsumerState<DirectionalArrow>
             child: RepaintBoundary(
               child: RotationTransition(
                 turns: _controller,
-                child: Image.asset(
-                  "assets/monolit.png",
-                  width: 250,
-                  height: 250,
-                  fit: BoxFit.contain,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Image.asset(
+                      "assets/monolit.png",
+                      width: 250,
+                      height: 250,
+                      fit: BoxFit.contain,
+                    ),
+                    FadeTransition(
+                      opacity: _glowController,
+                      child: Image.asset(
+                        "assets/monolit_glow.png",
+                        width: 250,
+                        height: 250,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            "${distance!.toStringAsFixed(0)} m",
-            style: TextStyle(color: Colors.white),
           ),
         ],
       ),

@@ -7,7 +7,7 @@ class ApiService {
       ? "http://localhost:5000/api"
       : "/api";
 
-  static Future<Map<String, double>?> verifyCode(String code) async {
+  static Future<Map<String, dynamic>?> verifyCode(String code) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/point_location"),
@@ -18,6 +18,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return {
+          "name": (data["name"]),
           "lat": (data["lat"] as num).toDouble(),
           "lon": (data["lon"] as num).toDouble(),
         };

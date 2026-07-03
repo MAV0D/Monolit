@@ -1,11 +1,11 @@
 {
-    "name": "GPS app",
-    "short_name": "GPS",
-    "start_url": "/larp-gps/",
+    "name": "Monolit",
+    "short_name": "Monolit",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "GPS point navigation",
+    "description": "Navigace pro cestování monolity",
     "orientation": "portrait-primary",
     "icons": [
         {

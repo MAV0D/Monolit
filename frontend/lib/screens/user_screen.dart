@@ -169,7 +169,13 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                           if (_enteredCodeFromKeyboard.length != 12) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text("Monolit nelze aktivovat."),
+                                content: Text(
+                                  "Monolit nelze aktivovat.",  
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                backgroundColor: Colors.redAccent,
                               ),
                             );
                             return;
@@ -184,7 +190,13 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text("Monolit nelze aktivovat."),
+                                content: Text(
+                                  "Monolit nelze aktivovat.",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                backgroundColor: Colors.redAccent,
                               ),
                             );
                             return;

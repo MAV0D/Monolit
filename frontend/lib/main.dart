@@ -15,10 +15,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Monolitní navigace',
+      title: 'Monolit',
       theme: ThemeData.dark(),
       onGenerateRoute: (settings) {
-        // Pokud uživatel zadal do prohlížeče domena.cz/admin
         if (settings.name == '/admin') {
           return MaterialPageRoute(
             settings: settings,

@@ -73,13 +73,15 @@ class _AdminPointsListViewState extends ConsumerState<AdminPointsListView> {
   }
 
   void _openForm(int? id) async {
-    await Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => AdminPointFormView(editPlaceId: id),
       ),
     );
-    _loadPlaces();
+    if (result==true) {
+      _loadPlaces();
+    }
   }
 
   void _deletePoint(BuildContext context, int id) {
@@ -329,7 +331,11 @@ class _AdminPointsListViewState extends ConsumerState<AdminPointsListView> {
                               SnackBar(
                                 content: Text(
                                   "Monolit byl ${newValue ? "" : "de"}aktivován.",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
                                 ),
+                                backgroundColor: Colors.redAccent,
                               ),
                             );
                             _changeState(place["id"], newValue);

@@ -216,7 +216,6 @@ class _SymbolKeyboardInputState extends State<SymbolKeyboardInput> {
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: widget.onCodeAccepted,
-            icon: const Icon(Icons.radar),
             label: Text(widget.submitButtonLabel),
           ),
         ],

@@ -38,7 +38,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Nesprávné heslo!"),
+            content: Text(
+              "Nesprávné heslo!",
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
             backgroundColor: Colors.redAccent,
           ),
         );

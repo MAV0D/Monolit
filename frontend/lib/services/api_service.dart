@@ -47,7 +47,7 @@ class ApiService {
     }
   }
 
-  static void addNewPoint(
+  static Future<void> addNewPoint(
     String token,
     String name,
     String code,
@@ -71,7 +71,7 @@ class ApiService {
     } catch (e) {}
   }
 
-  static void editPoint(
+  static Future<void> editPoint(
     String token,
     String name,
     String code,

@@ -59,7 +59,7 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
     });
   }
 
-  void _saveForm() {
+  void _saveForm() async {
     final token = ref.read(adminTokenProvider)!;
 
     if (_formKey.currentState!.validate()) {
@@ -70,29 +70,42 @@ class _AdminPointFormViewState extends ConsumerState<AdminPointFormView> {
       if (code == null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Byl zadán neplatný kód. ")));
+        ).showSnackBar(
+          SnackBar(content: Text(
+            "Byl zadán neplatný kód. ",
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ), 
+            backgroundColor: Colors.redAccent,
+          ),
+        );
         return;
       }
       final double lat = double.parse(_latController.text);
       final double lon = double.parse(_lonController.text);
 
       if (widget.editPlaceId != null) {
-        ApiService.editPoint(token, name, code, lat, lon, widget.editPlaceId!);
+        await ApiService.editPoint(token, name, code, lat, lon, widget.editPlaceId!);
       } else {
-        ApiService.addNewPoint(token, name, code, lat, lon);
+        await ApiService.addNewPoint(token, name, code, lat, lon);
       }
 
       if (!mounted) return;
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            widget.editPlaceId != null
+            widget.editPlaceId == null
                 ? "Monolit byl úspěšně vytvořen"
                 : "Monolit byl úspěšně upraven",
+            style: TextStyle(
+              color: Colors.white,
+            ),
           ),
+          backgroundColor: Colors.redAccent,
         ),
       );
     }
@@ -473,7 +486,14 @@ class BigramInputFormatter extends TextInputFormatter {
     final List<String> chunks = [];
     for (int i = 0; i < newClean.length; i += 2) {
       int end = (i + 2 <= newClean.length) ? i + 2 : newClean.length;
-      chunks.add(newClean.substring(i, end));
+
+      String chunk = newClean.substring(i, end);
+      if (chunk.length == 2) {
+        chunk = chunk[0].toUpperCase() + chunk[1].toLowerCase();
+      } else if (chunk.length == 1) {
+        chunk = chunk.toUpperCase();
+      }
+      chunks.add(chunk);
     }
     String formattedText = chunks.join('-');
 
